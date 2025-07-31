@@ -120,7 +120,7 @@ Check out our project pitch deck here:
 
 Coming soon!
 
-A short walkthrough of the donation flow, initiative creation, and reward system.
+A short walkthrough of the donation flow, initiative creation, and reward system. 
 
 📺 **[Placeholder:YouTube link]**
 

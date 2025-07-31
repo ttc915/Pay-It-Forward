@@ -16,6 +16,7 @@ node_modules/
 .ignition/
 .hardhat/
 ignition/deployments/chain-31337
+.wake/
 
 # Remix IDE
 **/artifacts/

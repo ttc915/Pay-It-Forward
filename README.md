@@ -137,6 +137,16 @@ A short walkthrough of the donation flow, initiative creation, and reward system
 - [ ] Launch a **Rewards Shop** where PIF tokens can be exchanged for:
   - Merch products  
   - Partner offers  
-  - IRL benefits  
+  - IRL benefits
+     
+---
 
+## 👥 Team
+
+We’re a team of builders passionate about Web3, transparency, and community-first fundraising.
+
+- **David Nagy-Elek** — Smart Contracts & Protocol Integration  
+- **Gabriel Stina** — Blockchain Enthusiast & Digital Marketing
+
+> We're hacking this together at **ETHCluj 2025**, and open to collaborators or feedback — reach out!
 

@@ -146,7 +146,7 @@ A short walkthrough of the donation flow, initiative creation, and reward system
 We’re a team of builders passionate about Web3, transparency, and community-first fundraising.
 
 - **David Nagy-Elek** — Smart Contracts & Protocol Integration  
-- **Gabriel Stina** — Blockchain Enthusiast & Digital Marketing
+- **Marian Stana** — Blockchain Enthusiast & Digital Marketing
 
 > We're hacking this together at **ETHCluj 2025**, and open to collaborators or feedback — reach out!
 

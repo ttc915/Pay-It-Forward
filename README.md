@@ -42,6 +42,11 @@ Donors receive PIF tokens as a reward and can always trust that funds will be us
 
 Each **Project** (school, NGO, etc.) can host multiple **Initiatives**.  
 
+Each initiative includes:
+- Goal amount in RON (via stable token)
+- Deadline (max 3 months)
+- Real-world purpose (e.g., buying 10 school benches)
+
 ```mermaid
 flowchart TD
     A[Create Initiative]
@@ -59,12 +64,6 @@ flowchart TD
     E -- Ongoing --> H
 
 ```
-
-
-Each initiative includes:
-- Goal amount in RON (via stable token)
-- Deadline (max 3 months)
-- Real-world purpose (e.g., buying 10 school benches)
 
 All logic is handled on-chain through smart contracts written in Solidity using Hardhat.
 

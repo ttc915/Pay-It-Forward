@@ -98,21 +98,22 @@ This creates:
 ## 🔐 Security Considerations
 
 - ✅ All funds are time-locked until either:
-  - Target is reached → `settleInitiative()` allows payout
-  - Deadline passes without funding → `withdrawDonation()` enables refund
+  - Target is reached → allows payout
+  - Deadline passes without funding → enables refund
 
 - 🚫 No owner withdrawal privileges unless project conditions are fully met  
 - ⚠️ Additional validation to prevent early rugpulls (donation lock-in period)
 
 ---
 
-## 🎤 Pitch Deck
+## 📽️ Pitch Deck
 
-Coming soon!  
+### 🇬🇧 English  
+Check out our project pitch deck here:  
+👉 [Pay It Forward – ETHCluj Pitch Deck](https://www.canva.com/design/DAGuupentiY/XolSy_w54JiZujdMBzzNcw/edit)
 
-Our visual pitch deck will be uploaded here for quick context, impact metrics, and demo walkthroughs.
-
-📌 **[Placeholder: Canva]**
+### 🇷🇴 Romanian  
+> *Versiunea în limba română a pitch deck-ului va fi disponibilă în curând.*
 
 ---
 ## 📽️ Product Demo
@@ -150,3 +151,23 @@ We’re a team of builders passionate about Web3, transparency, and community-fi
 
 > We're hacking this together at **ETHCluj 2025**, and open to collaborators or feedback — reach out!
 
+---
+
+## 🛠️ Developer Onboarding
+
+### Requirements
+
+- Node.js ≥ 18.x
+- Hardhat ≥ 2.22
+- Foundry (optional)
+- Git & npm
+- A free Alchemy or Infura key for testnet RPC
+
+### Getting Started
+
+```bash
+git clone https://github.com/your-org/pay-it-forward.git
+cd pay-it-forward
+npm install
+npx hardhat compile
+```

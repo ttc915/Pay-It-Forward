@@ -161,12 +161,11 @@ We’re a team of builders passionate about Web3, transparency, and community-fi
 - Hardhat ≥ 2.22
 - Foundry (optional)
 - Git & npm
-- A free Alchemy or Infura key for testnet RPC
 
 ### Getting Started
 
 ```bash
-git clone https://github.com/your-org/pay-it-forward.git
+git clone https://github.com/ttc915/Pay-It-Forward.git
 cd pay-it-forward
 npm install
 npx hardhat compile

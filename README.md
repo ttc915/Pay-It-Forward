@@ -164,9 +164,4 @@ We’re a team of builders passionate about Web3, transparency, and community-fi
 
 ### Getting Started
 
-```bash
-git clone https://github.com/ttc915/Pay-It-Forward.git
-cd pay-it-forward
-npm install
-npx hardhat compile
-```
+> Setup instructions will be added soon — feel free to open an issue if you want to get involved!

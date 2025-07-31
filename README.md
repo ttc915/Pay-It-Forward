@@ -1,5 +1,3 @@
-# Pay-It-Forward
-
 # Pay It Forward (PIF) 🌱
 
 **ETHCluj Hackathon 2025**  

@@ -122,7 +122,7 @@ Coming soon!
 
 A short walkthrough of the donation flow, initiative creation, and reward system. 
 
-📺 **[Placeholder:YouTube link]**
+📺 **[Placeholder:YouTube link ]**
 
 ---
 

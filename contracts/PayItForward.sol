@@ -51,8 +51,9 @@ contract PayItForward{
     
     // --- Create project ---
     function createProject(string memory name, string memory description) public {
-        projectCount++;
+
         projects[projectCount] = Project(projectCount, msg.sender, name, description);
+        projectCount++;
 
         // Save the project for owner
         uint idx = ownerProjectCount[msg.sender];
@@ -64,7 +65,6 @@ contract PayItForward{
     function createInitiative(uint projectId, string memory title, string memory description, uint goalAmount) public {
         require(projects[projectId].owner == msg.sender, "You are not the owner of the project");
 
-        initiativeCount++;
         uint deadline = block.timestamp + 30 days;
 
         // Initialize the new initiative by setting each field individually
@@ -80,6 +80,7 @@ contract PayItForward{
 
         // Save the initiative for the project
         uint idx = projectInitiativeCount[projectId];
+        initiativeCount++;
         projectInitiatives[projectId][idx] = initiativeCount;
         projectInitiativeCount[projectId]++;
     }
@@ -104,7 +105,7 @@ contract PayItForward{
         return ids;
     }
 
-        // --- Donate ---
+    // --- Donate ---
     function donate(uint initiativeId, uint amount) external {
         Initiative storage ini = initiatives[initiativeId];
         require(!ini.fulfilled, "Already funded");
@@ -123,22 +124,22 @@ contract PayItForward{
 
     // --- Withdraw donation ---
     function withdrawDonation(uint initiativeId) public {
-        Initiative storage ini = initiatives[initiativeId];
-        require(initiativeDonations[initiativeId][msg.sender] > 0, "You don't have a donation for this initiative");
         uint amount = initiativeDonations[initiativeId][msg.sender];
-        initiativeDonations[initiativeId][msg.sender] = 0;
-        bool transferSuccess = erc20Ron.transfer(msg.sender, amount);
-        require(transferSuccess, "Token transfer failed");
-    }
-
-    function claimDonation(uint initiativeId) public {
-        Initiative storage ini = initiatives[initiativeId];
-        require(ini.fulfilled, "Initiative is not funded");
-        uint amount = initiativeDonations[initiativeId][msg.sender];
+        require(amount > 0, "No donation found for this initiative");
+        require(!initiatives[initiativeId].fulfilled, "Initiative already fulfilled, use claim instead");
         
         initiativeDonations[initiativeId][msg.sender] = 0;
-        bool transferSuccess = erc20Ron.transfer(msg.sender, amount);
-        require(transferSuccess, "Token transfer failed");
+        require(erc20Ron.transfer(msg.sender, amount), "Token transfer failed");
+    }
+
+    // --- Claim donation ---
+    function claimDonation(uint initiativeId) public {
+        uint amount = initiativeDonations[initiativeId][msg.sender];
+        require(amount > 0, "No donation found for this initiative");
+        require(initiatives[initiativeId].fulfilled, "Initiative is not yet fulfilled");
+        
+        initiativeDonations[initiativeId][msg.sender] = 0;
+        require(erc20Ron.transfer(msg.sender, amount), "Token transfer failed");
     }
 
 

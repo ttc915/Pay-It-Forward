@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import {RewardToken} from "./RewardToken.sol";
-import {ERC20RON} from "./ERC20RON.sol";
+import {PIFRewards} from "./PIFRewards.sol";
+import {RONStablecoin} from "./RONStablecoin.sol";
 
 contract PayItForward{
 
@@ -39,12 +39,12 @@ contract PayItForward{
     mapping(uint => Project) public projects;
     mapping(uint => Initiative) public initiatives;
 
-    RewardToken public rewardToken;
-    ERC20RON public erc20Ron;
+    PIFRewards public rewardToken;
+    RONStablecoin public erc20Ron;
 
     constructor() {
-        rewardToken = new RewardToken();
-        erc20Ron = new ERC20RON();
+        rewardToken = new PIFRewards();
+        erc20Ron = new RONStablecoin();
     }
 
     // --- Withdraw donation ---

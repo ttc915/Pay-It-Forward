@@ -114,7 +114,7 @@ contract PayItForward {
     }
 
     // --- Donate ---
-    function donate(uint initiativeId, uint amount) external {
+    function donate(uint initiativeId, uint amount) external payable {
         Initiative storage ini = initiatives[initiativeId];
         require(!ini.fulfilled, "Already funded");
         require(amount > 0, "Zero donation");
@@ -130,7 +130,7 @@ contract PayItForward {
     }
 
     // --- Withdraw donation when initiative is not fulfilled by the donor ---
-    function withdrawDonation(uint initiativeId) public {
+    function withdrawDonation(uint initiativeId) public payable {
         Initiative storage initiative = initiatives[initiativeId];
         uint amount = initiative.donations[msg.sender];
         require(amount > 0, "No donation found for this initiative");
@@ -142,7 +142,7 @@ contract PayItForward {
     }
 
     // --- Claim donation when initiative is fulfilled by the project owner ---
-    function claimDonation(uint initiativeId) public {
+    function claimDonation(uint initiativeId) public payable {
         Initiative storage initiative = initiatives[initiativeId];
         Project storage project = projects[initiative.projectId];
         

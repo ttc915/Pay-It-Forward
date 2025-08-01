@@ -7,7 +7,7 @@ import {RONStablecoin} from "./RONStablecoin.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
-contract PayItForward{
+contract PayItForward {
 
     // State variables
     uint public projectCount;
@@ -44,7 +44,6 @@ contract PayItForward{
     mapping(uint256 => Initiative) public initiatives;
     mapping(address => uint) public ownerProjectCount;
     mapping(uint256 => uint) public projectInitiativeCount;
-    mapping(uint => mapping(address => uint)) public initiativeDonations;
     mapping(address => uint256[]) public ownerProjects;
     mapping(uint256 => uint256[]) public projectInitiatives;
 
@@ -120,6 +119,7 @@ contract PayItForward{
         require(!ini.fulfilled, "Already funded");
         require(amount > 0, "Zero donation");
 
+        ini.donations[msg.sender] += amount;
         ini.collectedAmount += amount;
         if (ini.collectedAmount >= ini.goalAmount) {
             ini.fulfilled = true;
@@ -131,16 +131,18 @@ contract PayItForward{
 
     // --- Withdraw donation when initiative is not fulfilled by the donor ---
     function withdrawDonation(uint initiativeId) public {
-        uint amount = initiativeDonations[initiativeId][msg.sender];
+        Initiative storage initiative = initiatives[initiativeId];
+        uint amount = initiative.donations[msg.sender];
         require(amount > 0, "No donation found for this initiative");
-        require(!initiatives[initiativeId].fulfilled, "Initiative already fulfilled, use claim instead");
+        require(!initiative.fulfilled, "Initiative already fulfilled, use claim instead");
         
-        initiativeDonations[initiativeId][msg.sender] = 0;
+        initiative.donations[msg.sender] = 0;
+        initiative.collectedAmount -= amount;
         erc20Ron.safeTransfer(msg.sender, amount);
     }
 
     // --- Claim donation when initiative is fulfilled by the project owner ---
-    function claimDonation(uint initiativeId) public onlyProjectOwner(initiative.projectId) {
+    function claimDonation(uint initiativeId) public {
         Initiative storage initiative = initiatives[initiativeId];
         Project storage project = projects[initiative.projectId];
         

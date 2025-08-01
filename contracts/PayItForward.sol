@@ -4,6 +4,9 @@ pragma solidity ^0.8.19;
 import {PIFRewards} from "./PIFRewards.sol";
 import {RONStablecoin} from "./RONStablecoin.sol";
 
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+
 contract PayItForward{
 
     // State variables
@@ -11,7 +14,9 @@ contract PayItForward{
     uint public initiativeCount;
 
     PIFRewards public rewardToken;
-    RONStablecoin public erc20Ron;
+    IERC20 public erc20Ron;
+
+    using SafeERC20 for IERC20;
 
     // Structures
     struct Project {
@@ -46,7 +51,7 @@ contract PayItForward{
 
     constructor() {
         rewardToken = new PIFRewards();
-        erc20Ron = new RONStablecoin();
+        erc20Ron = IERC20(address(new RONStablecoin()));
     }
     
     // --- Create project ---
@@ -62,9 +67,7 @@ contract PayItForward{
     }
 
     // --- Create initiative ---
-    function createInitiative(uint projectId, string memory title, string memory description, uint goalAmount) public {
-        require(projects[projectId].owner == msg.sender, "You are not the owner of the project");
-
+    function createInitiative(uint projectId, string memory title, string memory description, uint goalAmount) public onlyProjectOwner(projectId) {
         uint deadline = block.timestamp + 30 days;
 
         // Initialize the new initiative by setting each field individually
@@ -105,6 +108,12 @@ contract PayItForward{
         return ids;
     }
 
+    // Modifiers
+    modifier onlyProjectOwner(uint projectId) {
+        require(projects[projectId].owner == msg.sender, "You are not the owner of the project");
+        _;
+    }
+
     // --- Donate ---
     function donate(uint initiativeId, uint amount) external {
         Initiative storage ini = initiatives[initiativeId];
@@ -116,30 +125,33 @@ contract PayItForward{
             ini.fulfilled = true;
         }
 
-        bool transferSuccess = erc20Ron.transferFrom(msg.sender, address(this), amount);
-        require(transferSuccess, "Token transfer failed");
-
+        erc20Ron.safeTransferFrom(msg.sender, address(this), amount);
         rewardToken.mint(msg.sender, amount);
     }
 
-    // --- Withdraw donation ---
+    // --- Withdraw donation when initiative is not fulfilled by the donor ---
     function withdrawDonation(uint initiativeId) public {
         uint amount = initiativeDonations[initiativeId][msg.sender];
         require(amount > 0, "No donation found for this initiative");
         require(!initiatives[initiativeId].fulfilled, "Initiative already fulfilled, use claim instead");
         
         initiativeDonations[initiativeId][msg.sender] = 0;
-        require(erc20Ron.transfer(msg.sender, amount), "Token transfer failed");
+        erc20Ron.safeTransfer(msg.sender, amount);
     }
 
-    // --- Claim donation ---
-    function claimDonation(uint initiativeId) public {
-        uint amount = initiativeDonations[initiativeId][msg.sender];
-        require(amount > 0, "No donation found for this initiative");
-        require(initiatives[initiativeId].fulfilled, "Initiative is not yet fulfilled");
+    // --- Claim donation when initiative is fulfilled by the project owner ---
+    function claimDonation(uint initiativeId) public onlyProjectOwner(initiative.projectId) {
+        Initiative storage initiative = initiatives[initiativeId];
+        Project storage project = projects[initiative.projectId];
         
-        initiativeDonations[initiativeId][msg.sender] = 0;
-        require(erc20Ron.transfer(msg.sender, amount), "Token transfer failed");
+        require(msg.sender == project.owner, "Only project owner can claim donations");
+        require(initiative.fulfilled, "Initiative is not yet fulfilled");
+        
+        uint amount = initiative.collectedAmount;
+        require(amount > 0, "No funds to claim");
+        
+        initiative.collectedAmount = 0;
+        erc20Ron.safeTransfer(msg.sender, amount);
     }
 
 

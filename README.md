@@ -200,10 +200,7 @@ You can connect your local project to Remix IDE using `remixd` for a seamless de
 
 3. Go to [Remix IDE](https://remix.ethereum.org/)
 4. In the File Explorer, click the "Open" button
-5. Select "Connect to localhost" and ensure your local Hardhat node is running:
-   ```bash
-   npx hardhat node
-   ```
+5. Select "Connect to localhost" 
 6. Or, to connect directly to the repository:
    - Click on the "Workspaces" dropdown
    - Select "Clone from GitHub"

@@ -1,24 +1,22 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import {PIFRewards} from "./PIFRewards.sol";
-import {RONStablecoin} from "./RONStablecoin.sol";
+import {RewardToken} from "./RewardToken.sol";
+import {ERC20RON} from "./ERC20RON.sol";
 
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+contract PayItForward{
 
-contract PayItForward {
-
-    // State variables
     uint public projectCount;
     uint public initiativeCount;
 
-    PIFRewards public rewardToken;
-    IERC20 public erc20Ron;
+    // mapping: owner => (index => projectId)
+    mapping(address => mapping(uint => uint)) public ownerProjects;
+    mapping(address => uint) public ownerProjectCount;
 
-    using SafeERC20 for IERC20;
+    // mapping: projectId => (index => initiativeId)
+    mapping(uint => mapping(uint => uint)) public projectInitiatives;
+    mapping(uint => uint) public projectInitiativeCount;
 
-    // Structures
     struct Project {
         uint id;
         address owner;
@@ -38,26 +36,30 @@ contract PayItForward {
         mapping(address => uint) donations;
     }
 
+    mapping(uint => Project) public projects;
+    mapping(uint => Initiative) public initiatives;
 
-    // Mappings
-    mapping(uint256 => Project) public projects;
-    mapping(uint256 => Initiative) public initiatives;
-    mapping(address => uint) public ownerProjectCount;
-    mapping(uint256 => uint) public projectInitiativeCount;
-    mapping(address => uint256[]) public ownerProjects;
-    mapping(uint256 => uint256[]) public projectInitiatives;
-
+    RewardToken public rewardToken;
+    ERC20RON public erc20Ron;
 
     constructor() {
-        rewardToken = new PIFRewards();
-        erc20Ron = IERC20(address(new RONStablecoin()));
+        rewardToken = new RewardToken();
+        erc20Ron = new ERC20RON();
     }
-    
-    // --- Create project ---
-    function createProject(string memory name, string memory description) public {
 
-        projects[projectCount] = Project(projectCount, msg.sender, name, description);
+    // --- Withdraw donation ---
+    function withdrawDonation(uint initiativeId) public {
+        Initiative storage ini = initiatives[initiativeId];
+        require(ini.donations[msg.sender] > 0, "You don't have a donation for this initiative");
+        uint amount = ini.donations[msg.sender];
+        ini.donations[msg.sender] = 0;
+        erc20Ron.transfer(msg.sender, amount);
+    }
+
+    // --- Create project ---
+    function createProject(string memory name, string memory type_, string memory description) public {
         projectCount++;
+        projects[projectCount] = Project(projectCount, msg.sender, name, description);
 
         // Save the project for owner
         uint idx = ownerProjectCount[msg.sender];
@@ -65,36 +67,43 @@ contract PayItForward {
         ownerProjectCount[msg.sender]++;
     }
 
-    // --- Create initiative ---
-    function createInitiative(uint projectId, string memory title, string memory description, uint goalAmount) public onlyProjectOwner(projectId) {
-        uint deadline = block.timestamp + 30 days;
+function createInitiative(uint projectId, string memory title, string memory description, uint goalAmount) public {
+    require(projects[projectId].owner == msg.sender, "You are not the owner of the project");
 
-        // Initialize the new initiative by setting each field individually
-        Initiative storage newInitiative = initiatives[initiativeCount];
-        newInitiative.id = initiativeCount;
-        newInitiative.projectId = projectId;
-        newInitiative.title = title;
-        newInitiative.description = description;
-        newInitiative.goalAmount = goalAmount;
-        newInitiative.collectedAmount = 0;
-        newInitiative.fulfilled = false;
-        newInitiative.deadline = deadline;
+    initiativeCount++;
+    uint deadline = block.timestamp + 30 days;
 
-        // Save the initiative for the project
-        uint idx = projectInitiativeCount[projectId];
-        initiativeCount++;
-        projectInitiatives[projectId][idx] = initiativeCount;
-        projectInitiativeCount[projectId]++;
-    }
+    // Initialize the new initiative by setting each field individually
+    Initiative storage newInitiative = initiatives[initiativeCount];
+    newInitiative.id = initiativeCount;
+    newInitiative.projectId = projectId;
+    newInitiative.title = title;
+    newInitiative.description = description;
+    newInitiative.goalAmount = goalAmount;
+    newInitiative.collectedAmount = 0;
+    newInitiative.fulfilled = false;
+    newInitiative.deadline = deadline;
 
-    // --- View initiatives for a project ---
-    function getInitiativesOfProject(uint projectId) public view returns (uint[] memory) {
-        uint n = projectInitiativeCount[projectId];
-        uint[] memory ids = new uint[](n);
-        for (uint i = 0; i < n; i++) {
-            ids[i] = projectInitiatives[projectId][i];
+    // Save the initiative for the project
+    uint idx = projectInitiativeCount[projectId];
+    projectInitiatives[projectId][idx] = initiativeCount;
+    projectInitiativeCount[projectId]++;
+}
+
+    // --- Donate ---
+    function donate(uint initiativeId, uint amount) external {
+        Initiative storage ini = initiatives[initiativeId];
+        require(!ini.fulfilled, "Already funded");
+        require(amount > 0, "Zero donation");
+
+        ini.collectedAmount += amount;
+        if (ini.collectedAmount >= ini.goalAmount) {
+            ini.fulfilled = true;
         }
-        return ids;
+
+        erc20Ron.transferFrom(msg.sender, address(this), amount);
+
+        rewardToken.mint(msg.sender, amount);
     }
 
     // --- View projects for an owner ---
@@ -107,54 +116,20 @@ contract PayItForward {
         return ids;
     }
 
-    // Modifiers
-    modifier onlyProjectOwner(uint projectId) {
-        require(projects[projectId].owner == msg.sender, "You are not the owner of the project");
-        _;
-    }
-
-    // --- Donate ---
-    function donate(uint initiativeId, uint amount) external payable {
+    function claimonation(uint initiativeId) public {
         Initiative storage ini = initiatives[initiativeId];
-        require(!ini.fulfilled, "Already funded");
-        require(amount > 0, "Zero donation");
+        require(ini.fulfilled, "Initiative is not funded");
+        ini.donations[msg.sender] = 0;
+        erc20Ron.transfer(msg.sender, ini.donations[msg.sender]);
+    }
 
-        ini.donations[msg.sender] += amount;
-        ini.collectedAmount += amount;
-        if (ini.collectedAmount >= ini.goalAmount) {
-            ini.fulfilled = true;
+    // --- View initiatives for a project ---
+    function getInitiativesOfProject(uint projectId) public view returns (uint[] memory) {
+        uint n = projectInitiativeCount[projectId];
+        uint[] memory ids = new uint[](n);
+        for (uint i = 0; i < n; i++) {
+            ids[i] = projectInitiatives[projectId][i];
         }
-
-        erc20Ron.safeTransferFrom(msg.sender, address(this), amount);
-        rewardToken.mint(msg.sender, amount);
+        return ids;
     }
-
-    // --- Withdraw donation when initiative is not fulfilled by the donor ---
-    function withdrawDonation(uint initiativeId) public payable {
-        Initiative storage initiative = initiatives[initiativeId];
-        uint amount = initiative.donations[msg.sender];
-        require(amount > 0, "No donation found for this initiative");
-        require(!initiative.fulfilled, "Initiative already fulfilled, use claim instead");
-        
-        initiative.donations[msg.sender] = 0;
-        initiative.collectedAmount -= amount;
-        erc20Ron.safeTransfer(msg.sender, amount);
-    }
-
-    // --- Claim donation when initiative is fulfilled by the project owner ---
-    function claimDonation(uint initiativeId) public payable {
-        Initiative storage initiative = initiatives[initiativeId];
-        Project storage project = projects[initiative.projectId];
-        
-        require(msg.sender == project.owner, "Only project owner can claim donations");
-        require(initiative.fulfilled, "Initiative is not yet fulfilled");
-        
-        uint amount = initiative.collectedAmount;
-        require(amount > 0, "No funds to claim");
-        
-        initiative.collectedAmount = 0;
-        erc20Ron.safeTransfer(msg.sender, amount);
-    }
-
-
 }

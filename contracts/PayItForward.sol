@@ -57,7 +57,7 @@ contract PayItForward{
     }
 
     // --- Create project ---
-    function createProject(string memory name, string memory type_, string memory description) public {
+    function createProject(string memory name, string memory description) public {
         projectCount++;
         projects[projectCount] = Project(projectCount, msg.sender, name, description);
 

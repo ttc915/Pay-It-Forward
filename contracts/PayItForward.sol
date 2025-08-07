@@ -10,8 +10,8 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 contract PayItForward {
 
     // State variables
-    uint public projectCount;
-    uint public initiativeCount;
+    uint256 public projectCount;
+    uint256 public initiativeCount;
 
     PIFRewards public rewardToken;
     IERC20 public erc20Ron;
@@ -20,19 +20,19 @@ contract PayItForward {
 
     // Structures
     struct Project {
-        uint id;
+        uint256 id;
         address owner;
         string name;
         string description;
     }
 
     struct Initiative {
-        uint id;
-        uint projectId;
+        uint256 id;
+        uint256 projectId;
         string title;
         string description;
-        uint goalAmount;
-        uint collectedAmount;
+        uint256 goalAmount;
+        uint256 collectedAmount;
         bool fulfilled;
         uint256 deadline;
         mapping(address => uint) donations;
@@ -55,10 +55,9 @@ contract PayItForward {
     
     // --- Create project ---
     function createProject(string memory name, string memory description) public {
-
-        projects[projectCount] = Project(projectCount, msg.sender, name, description);
         projectCount++;
-
+        projects[projectCount] = Project(projectCount, msg.sender, name, description);
+        
         // Save the project for owner
         uint idx = ownerProjectCount[msg.sender];
         ownerProjects[msg.sender][idx] = projectCount;

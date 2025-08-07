@@ -19,6 +19,7 @@ contract PayItForward {
     using SafeERC20 for IERC20;
 
     // Structures
+    // Project structure
     struct Project {
         uint256 id;
         address owner;
@@ -26,6 +27,7 @@ contract PayItForward {
         string description;
     }
 
+    // Initiative structure
     struct Initiative {
         uint256 id;
         uint256 projectId;
@@ -55,12 +57,16 @@ contract PayItForward {
     
     // --- Create project ---
     function createProject(string memory name, string memory description) public {
-        projectCount++;
-        projects[projectCount] = Project(projectCount, msg.sender, name, description);
+
+        // input validation
+        require(bytes(name).length > 0, "Name is required");
+        require(bytes(description).length > 0, "Description is required");
+
+        uint256 newProjectId = projectCount++;
+        projects[newProjectId] = Project(newProjectId, msg.sender, name, description);
         
         // Save the project for owner
-        uint idx = ownerProjectCount[msg.sender];
-        ownerProjects[msg.sender][idx] = projectCount;
+        ownerProjects[msg.sender].push(newProjectId);
         ownerProjectCount[msg.sender]++;
     }
 

@@ -98,25 +98,6 @@ contract PayItForward {
         projectInitiatives[projectId].push(newInitiativeId);
     }
 
-    // --- View initiatives for a project ---
-    function getInitiativesOfProject(uint32 projectId) public view returns (uint32[] memory) {
-        uint n = projectInitiatives[projectId].length;
-        uint32[] memory ids = new uint32[](n);
-        for (uint i = 0; i < n; i++) {
-            ids[i] = projectInitiatives[projectId][i];
-        }
-        return ids;
-    }
-
-    // --- View projects for an owner ---
-    function getProjectsOfOwner(address owner) public view returns (uint32[] memory) {
-        uint32[] memory ids = new uint32[](ownerProjects[owner].length);
-        for (uint i = 0; i < ownerProjects[owner].length; i++) {
-            ids[i] = ownerProjects[owner][i];
-        }
-        return ids;
-    }
-
     // Modifiers
     modifier onlyProjectOwner(uint32 projectId) {
         require(projects[projectId].owner == msg.sender, "You are not the owner of the project");
@@ -124,45 +105,36 @@ contract PayItForward {
     }
 
     // --- Donate ---
-    function donate(uint32 initiativeId, uint128 amount) external payable {
+    function donate(uint32 initiativeId, uint128 amount) public {
+        require(initiativeId < initiativeCount, "Initiative not found");
         Initiative storage ini = initiatives[initiativeId];
-        require(!ini.fulfilled, "Already funded");
+        require(ini.goalAmount > 0, "Uninitialized initiative");
+        require(block.timestamp <= ini.deadline, "Past deadline");
         require(amount > 0, "Zero donation");
+        require(!ini.fulfilled, "Already funded");
 
+        // Transfer tokens from donor to contract
+        erc20Ron.safeTransferFrom(msg.sender, address(this), amount);
+
+        // Update donor record and totals
         ini.donations[msg.sender] += amount;
         ini.collectedAmount += amount;
+
+        // Mark as fulfilled if goal reached
         if (ini.collectedAmount >= ini.goalAmount) {
             ini.fulfilled = true;
         }
 
-        erc20Ron.safeTransferFrom(msg.sender, address(this), amount);
+        // Mint reward tokens to donor
         rewardToken.mint(msg.sender, amount);
     }
 
-    // --- Withdraw donation when initiative is not fulfilled by the donor ---
-    function withdrawDonation(uint32 initiativeId) public payable {
-        Initiative storage initiative = initiatives[initiativeId];
-        uint128 amount = initiative.donations[msg.sender];
-        require(amount > 0, "No donation found for this initiative");
-        require(!initiative.fulfilled, "Initiative already fulfilled, use claim instead");
-        
-        initiative.donations[msg.sender] = 0;
-        initiative.collectedAmount -= amount;
-        erc20Ron.safeTransfer(msg.sender, amount);
-    }
-
-    // --- Claim donation when initiative is fulfilled by the project owner ---
-    function claimDonation(uint32 initiativeId) public payable {
-        Initiative storage initiative = initiatives[initiativeId];
-        Project storage project = projects[initiative.projectId];
-        
-        require(msg.sender == project.owner, "Only project owner can claim donations");
-        require(initiative.fulfilled, "Initiative is not yet fulfilled");
-        
-        uint amount = initiative.collectedAmount;
-        require(amount > 0, "No funds to claim");
-        
-        initiative.collectedAmount = 0;
-        erc20Ron.safeTransfer(msg.sender, amount);
+    // =========================
+    // TEST-ONLY helper methods
+    // Remove before production
+    // =========================
+    function testMintRon(address to, uint256 amount) external {
+        // This contract is the owner of RONStablecoin, so it can mint
+        RONStablecoin(address(erc20Ron)).mint(to, amount);
     }
 }

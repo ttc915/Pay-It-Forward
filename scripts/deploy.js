@@ -2,65 +2,53 @@
 const hre = require("hardhat");
 
 async function main() {
+  console.log("Starting deployment...");
+
+  // Deploy PayItForward contract which will deploy RONStablecoin and PIFRewards
   console.log("Deploying PayItForward contract...");
-
-  // Deploy PIFRewards token first
-  console.log("Deploying PIFRewards token...");
-  const PIFRewards = await hre.ethers.getContractFactory("PIFRewards");
-  const pifRewards = await PIFRewards.deploy();
-  await pifRewards.waitForDeployment();
-  console.log("PIFRewards deployed to:", await pifRewards.getAddress());
-
-  // Deploy RONStablecoin token
-  console.log("Deploying RONStablecoin token...");
-  const RONStablecoin = await hre.ethers.getContractFactory("RONStablecoin");
-  const ronStablecoin = await RONStablecoin.deploy();
-  await ronStablecoin.waitForDeployment();
-  console.log("RONStablecoin deployed to:", await ronStablecoin.getAddress());
-
-  // Deploy PayItForward with token addresses
-  console.log("Deploying PayItForward...");
   const PayItForward = await hre.ethers.getContractFactory("PayItForward");
   const payItForward = await PayItForward.deploy();
   await payItForward.waitForDeployment();
 
-  console.log("PayItForward deployed to:", await payItForward.getAddress());
+  const payItForwardAddress = await payItForward.getAddress();
+  console.log("PayItForward deployed to:", payItForwardAddress);
 
-  // Verify token addresses in PayItForward
-  const deployedRewardToken = await payItForward.rewardToken();
-  const deployedStablecoin = await payItForward.erc20Ron();
+  // Get the addresses of the deployed tokens
+  const ronTokenAddress = await payItForward.ronToken();
+  const rewardTokenAddress = await payItForward.rewardToken();
 
-  console.log("PIFRewards address in PayItForward:", deployedRewardToken);
-  console.log("RONStablecoin address in PayItForward:", deployedStablecoin);
+  console.log("RONStablecoin deployed to:", ronTokenAddress);
+  console.log("PIFRewards deployed to:", rewardTokenAddress);
 
   // Verify the contracts on block explorer (if on a live network)
   if (process.env.ETHERSCAN_API_KEY) {
+    console.log("Verifying contracts on Etherscan...");
+
+    // Wait for block explorer to index the contract
     console.log("Waiting for block confirmations...");
-    await new Promise((resolve) => setTimeout(resolve, 60000)); // Wait for 1 minute
+    await new Promise((resolve) => setTimeout(resolve, 30000));
 
-    console.log("Verifying contracts...");
-    await hre.run("verify:verify", {
-      address: await pifRewards.getAddress(),
-      constructorArguments: [],
-    });
-
-    await hre.run("verify:verify", {
-      address: await ronStablecoin.getAddress(),
-      constructorArguments: [],
-    });
-
-    await hre.run("verify:verify", {
-      address: await payItForward.getAddress(),
-      constructorArguments: [],
-    });
+    try {
+      await hre.run("verify:verify", {
+        address: payItForwardAddress,
+        constructorArguments: [],
+      });
+      console.log("PayItForward verified on Etherscan");
+    } catch (error) {
+      console.error("Error verifying PayItForward:", error.message);
+    }
   }
+
+  return {
+    payItForward: payItForwardAddress,
+    ronToken: ronTokenAddress,
+    rewardToken: rewardTokenAddress,
+  };
 }
 
 // We recommend this pattern to be able to use async/await everywhere
 // and properly handle errors.
-main()
-  .then(() => process.exit(0))
-  .catch((error) => {
-    console.error(error);
-    process.exit(1);
-  });
+main().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});

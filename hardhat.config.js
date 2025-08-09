@@ -1,8 +1,8 @@
 require("@nomicfoundation/hardhat-toolbox");
-require("@nomicfoundation/hardhat-verify"); 
+require("@nomicfoundation/hardhat-verify");
 require("hardhat-gas-reporter");
 require("solidity-coverage");
-require("dotenv").config({ path: __dirname + '/.env' });
+require("dotenv").config({ path: __dirname + "/.env" });
 
 // Ensure we have the required environment variables
 const { ETHERSCAN_API_KEY, COINMARKETCAP_API_KEY } = process.env;
@@ -11,7 +11,7 @@ const { ETHERSCAN_API_KEY, COINMARKETCAP_API_KEY } = process.env;
 const NETWORKS = {
   hardhat: {
     chainId: 31337,
-    allowUnlimitedContractSize: true, 
+    allowUnlimitedContractSize: true,
   },
   localhost: {
     chainId: 31337,
@@ -34,7 +34,7 @@ const NETWORKS = {
 
 // Solidity compiler configuration
 const SOLIDITY_SETTINGS = {
-  version: "0.8.19",
+  version: "0.8.26",
   settings: {
     optimizer: {
       enabled: true,
@@ -43,16 +43,16 @@ const SOLIDITY_SETTINGS = {
         yul: true,
       },
     },
-    viaIR: true, 
+    viaIR: true,
   },
 };
 
 module.exports = {
   solidity: SOLIDITY_SETTINGS,
-  
+
   // Network configurations
   networks: NETWORKS,
-  
+
   // Etherscan verification
   etherscan: {
     apiKey: {
@@ -61,21 +61,22 @@ module.exports = {
       // Add other networks as needed
     },
   },
-  
+
   // Gas reporter configuration (for gas optimization)
   gasReporter: {
     enabled: process.env.REPORT_GAS === "true",
     currency: "USD",
     coinmarketcap: COINMARKETCAP_API_KEY,
-    token: "ETH", 
-    gasPriceApi: "https://api.etherscan.io/api?module=proxy&action=eth_gasPrice",
+    token: "ETH",
+    gasPriceApi:
+      "https://api.etherscan.io/api?module=proxy&action=eth_gasPrice",
   },
-  
+
   // Configuration for contract verification
   sourcify: {
-    enabled: true, 
+    enabled: true,
   },
-  
+
   // Path configuration
   paths: {
     sources: "./contracts",
@@ -83,15 +84,15 @@ module.exports = {
     cache: "./cache",
     artifacts: "./artifacts",
   },
-  
+
   // Typechain configuration
   typechain: {
     outDir: "typechain-types",
     target: "ethers-v6",
   },
-  
+
   // For local development
   mocha: {
-    timeout: 40000, 
+    timeout: 40000,
   },
 };

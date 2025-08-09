@@ -7,7 +7,7 @@ Empowering local communities, schools, and NGOs through transparent blockchain-b
 
 ## 🧠 Project Summary
 
-**Pay It Forward (PIF)** is a decentralized donation platform that allows parents, communities, and donors to fund school and local initiatives using crypto-backed smart contracts. 
+**Pay It Forward (PIF)** is a decentralized donation platform that allows parents, communities, and donors to fund school and local initiatives using crypto-backed smart contracts.
 
 Donors receive PIF tokens as a reward and can always trust that funds will be used transparently, via smart contracts.
 
@@ -16,6 +16,7 @@ Donors receive PIF tokens as a reward and can always trust that funds will be us
 ---
 
 ## 💡 Key Features
+
 - 🏗️ **Simple Architecture**
   Focused on ease of use and initiative creation.
 
@@ -27,7 +28,6 @@ Donors receive PIF tokens as a reward and can always trust that funds will be us
 
 - 🪙 **Reward Token: PIF**  
   Every donor earns PIF tokens as recognition for their contribution.
-  
 - 🔒 **Transparent Smart Contract Logic**  
   All donations are locked in smart contracts until conditions are met (funded or expired).
 
@@ -38,9 +38,10 @@ Donors receive PIF tokens as a reward and can always trust that funds will be us
 
 ## 🔗 Architecture Overview
 
-Each **Project** (school, NGO, etc.) can host multiple **Initiatives**.  
+Each **Project** (school, NGO, etc.) can host multiple **Initiatives**.
 
 Each initiative includes:
+
 - Goal amount in RON (via stable token)
 - Deadline (max 3 months)
 - Real-world purpose (e.g., buying 10 school benches)
@@ -65,7 +66,7 @@ flowchart TD
 
 All logic is handled on-chain through smart contracts written in Solidity using Hardhat.
 
-> *(Planned IPFS support to attach image + description metadata to each initiative)*
+> _(Planned IPFS support to attach image + description metadata to each initiative)_
 
 ---
 
@@ -78,6 +79,7 @@ To enhance trust, all initiative and donation metadata is published as **data NF
 - 🔐 Future expansion may use **Compute-to-Data** for insights while protecting donor privacy
 
 This creates:
+
 - A transparent, decentralized public record
 - Verifiable donation history
 - Potential for third-party analysis, funding metrics, and DAO integrations
@@ -92,7 +94,7 @@ This creates:
   - `PIF`: ERC20 Reward Token
   - `RONToken`: Stablecoin-pegged donation token
 - **Data Layer**: Ocean Protocol (data NFTs + metadata publishing)
-  
+
 ---
 
 ## 🔐 Security Considerations
@@ -101,26 +103,29 @@ This creates:
   - Target is reached → allows payout
   - Deadline passes without funding → enables refund
 
-- 🚫 No owner withdrawal privileges unless project conditions are fully met  
+- 🚫 No owner withdrawal privileges unless project conditions are fully met
 - ⚠️ Additional validation to prevent early rugpulls (donation lock-in period)
 
 ---
 
 ## 📽️ Pitch Deck
 
-### 🇬🇧 English  
+### 🇬🇧 English
+
 Check out our project pitch deck here:  
 👉 [Pay It Forward – ETHCluj Pitch Deck](https://www.canva.com/design/DAGuupentiY/XolSy_w54JiZujdMBzzNcw/edit)
 
-### 🇷🇴 Romanian  
-> *Versiunea în limba română a pitch deck-ului va fi disponibilă în curând.*
+### 🇷🇴 Romanian
+
+> _Versiunea în limba română a pitch deck-ului va fi disponibilă în curând._
 
 ---
+
 ## 📽️ Product Demo
 
 Coming soon!
 
-A short walkthrough of the donation flow, initiative creation, and reward system. 
+A short walkthrough of the donation flow, initiative creation, and reward system.
 
 📺 **[Placeholder:YouTube link ]**
 
@@ -130,23 +135,23 @@ A short walkthrough of the donation flow, initiative creation, and reward system
 
 - [x] Smart contract: initiative creation, donation, refund, reward
 - [ ] Integrate **Ocean Protocol** to publish donation/project metadata as decentralized data assets
-- [ ] Finalize frontend integration  
-- [ ] Record & embed product demo  
-- [ ] Add initiative metadata to IPFS  
-- [ ] Add community voting / upvote system  
-- [ ] Add donor reputation scoring (future)  
+- [ ] Finalize frontend integration
+- [ ] Record & embed product demo
+- [ ] Add initiative metadata to IPFS
+- [ ] Add community voting / upvote system
+- [ ] Add donor reputation scoring (future)
 - [ ] Launch a **Rewards Shop** where PIF tokens can be exchanged for:
-  - Merch products  
-  - Partner offers  
+  - Merch products
+  - Partner offers
   - IRL benefits
-     
+
 ---
 
 ## 👥 Team
 
 We’re a team of builders passionate about Web3, transparency, and community-first fundraising.
 
-- **David Nagy-Elek** — Smart Contracts & Protocol Integration  
+- **David Nagy-Elek** — Smart Contracts & Protocol Integration
 - **Marian Stana** — Blockchain Enthusiast & Digital Marketing
 
 > We're hacking this together at **ETHCluj 2025**, and open to collaborators or feedback — reach out!
@@ -165,42 +170,50 @@ We’re a team of builders passionate about Web3, transparency, and community-fi
 ### Getting Started
 
 #### 1. Clone the Repository
+
 ```bash
 git clone https://github.com/ttc915/Pay-It-Forward.git
 cd Pay-It-Forward
 ```
 
 #### 2. Install Dependencies
+
 ```bash
 npm install
 ```
 
 #### 3. Configure Environment
+
 Create a `.env` file in the root directory with the following variables:
+
 ```env
 PRIVATE_KEY=your_wallet_private_key
 RPC_URL=your_ethereum_node_url
 ```
 
 #### 4. Using Remix Web IDE
+
 You can easily interact with the smart contracts using Remix IDE:
 
 #### 4. Using Remix Web IDE with remixd
+
 You can connect your local project to Remix IDE using `remixd` for a seamless development experience:
 
 1. Install `@remix-project/remixd` globally:
+
    ```bash
    npm install -g @remix-project/remixd
    ```
 
 2. Start `remixd` in the root directory of your project:
+
    ```bash
    remixd -s . -u https://remix.ethereum.org
    ```
 
 3. Go to [Remix IDE](https://remix.ethereum.org/)
 4. In the File Explorer, click the "Open" button
-5. Select "Connect to localhost" 
+5. Select "Connect to localhost"
 6. Or, to connect directly to the repository:
    - Click on the "Workspaces" dropdown
    - Select "Clone from GitHub"
@@ -218,6 +231,7 @@ You can connect your local project to Remix IDE using `remixd` for a seamless de
    - Deploy contracts and interact with them using the UI
 
 #### 5. Running Tests
+
 ```bash
 # Run all tests
 npx hardhat test
@@ -230,21 +244,27 @@ npx hardhat coverage
 ```
 
 #### 6. Local Development Network
+
 Start a local Hardhat network:
+
 ```bash
 npx hardhat node
 ```
 
 In a separate terminal, deploy contracts to the local network:
+
 ```bash
 npx hardhat run --network localhost scripts/deploy.js
 ```
 
 #### 7. Verifying Contracts
+
 To verify contracts on Etherscan:
+
 ```bash
 npx hardhat verify --network <network> <contract_address> <constructor_arguments>
 ```
 
 ### Need Help?
+
 If you encounter any issues or have questions, feel free to [open an issue](https://github.com/ttc915/Pay-It-Forward/issues)!

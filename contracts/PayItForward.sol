@@ -1,46 +1,44 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.19;
+pragma solidity 0.8.26;
 
 import {PIFRewards} from "./PIFRewards.sol";
 import {RONStablecoin} from "./RONStablecoin.sol";
-
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
-
 contract PayItForward {
-
-    uint64 public constant INITIATIVE_DURATION = 30 days;
+    using SafeERC20 for IERC20;
 
     // State variables
+    RONStablecoin public immutable ronToken;
+    PIFRewards public immutable rewardToken;
+
+    // Project and initiative tracking
     uint32 public projectCount;
     uint32 public initiativeCount;
 
-    PIFRewards public rewardToken;
-    IERC20 public erc20Ron;
-
-    using SafeERC20 for IERC20;
+    // Constants
+    uint64 public constant DEFAULT_FUNDING_PERIOD = 30 days;
+    uint128 public constant TOKEN_REWARD_RATE = 100; // 1 RON = 100 PIF tokens
 
     // Structures
-    // Project structure
     struct Project {
         address owner;
         uint32 id;
-        string name;
+        string title;
         string description;
     }
 
-    // Initiative structure
     struct Initiative {
         uint32 id;
         uint32 projectId;
-        bool fulfilled;
-        uint256 deadline;
-        uint128 goalAmount;
-        uint128 collectedAmount;
+        bool isFulfilled;
+        uint256 endTime;
+        uint128 fundingTarget;
+        uint128 totalRaised;
         string title;
         string description;
-        mapping(address => uint128) donations;
+        mapping(address => uint128) donationsByAddress;
     }
 
     // Mappings
@@ -49,92 +47,141 @@ contract PayItForward {
     mapping(address => uint32[]) public ownerProjects;
     mapping(uint32 => uint32[]) public projectInitiatives;
 
-    constructor() {
-        rewardToken = new PIFRewards();
-        erc20Ron = IERC20(address(new RONStablecoin()));
-    }
-    
-    // --- Create project ---
-    function createProject(string memory name, string memory description) public {
+    // Events
+    event ProjectCreated(uint32 indexed projectId, address indexed owner, string title);
+    event InitiativeCreated(uint32 indexed initiativeId, uint32 indexed projectId, string title, uint128 fundingTarget);
+    event DonationReceived(uint32 indexed initiativeId, address indexed donor, uint128 amount);
+    event FundsClaimed(uint32 indexed initiativeId, address indexed recipient, uint128 amount);
 
-        // input validation
-        require(bytes(name).length > 0, "Name is required");
-        require(bytes(description).length > 0, "Description is required");
+    constructor() {
+        // Deploy tokens
+        ronToken = new RONStablecoin();
+        rewardToken = new PIFRewards();
+
+        // Set rewarder to this contract
+        rewardToken.setRewarder(address(this));
+    }
+
+    // --- Project Management ---
+    function createProject(string calldata title, string calldata description) external {
+        require(bytes(title).length > 0, "Title required");
+        require(bytes(description).length > 0, "Description required");
 
         uint32 newProjectId = projectCount++;
-        projects[newProjectId] = Project(msg.sender, newProjectId, name, description);
-        
-        // Save the project for owner
+        projects[newProjectId] = Project({owner: msg.sender, id: newProjectId, title: title, description: description});
+
         ownerProjects[msg.sender].push(newProjectId);
+        emit ProjectCreated(newProjectId, msg.sender, title);
     }
 
-    // --- Create initiative ---
-    function createInitiative(uint32 projectId, string memory title, string memory description, uint128 goalAmount) public onlyProjectOwner(projectId) {
-
-        Project memory project = projects[projectId];
-        require(project.owner != address(0), "Project does not exist");
-
-        // Input validation
-        require(bytes(title).length > 0, "Title is required");
-        require(bytes(description).length > 0, "Description is required");
-        require(goalAmount > 0, "Goal amount must be greater than 0");
+    // --- Initiative Management ---
+    function createInitiative(
+        uint32 projectId,
+        string calldata title,
+        string calldata description,
+        uint128 fundingTarget
+    ) external onlyProjectOwner(projectId) {
+        require(bytes(title).length > 0, "Title required");
+        require(bytes(description).length > 0, "Description required");
+        require(fundingTarget > 0, "Funding target must be > 0");
+        require(projects[projectId].owner != address(0), "Project not found");
 
         uint32 newInitiativeId = initiativeCount++;
-        uint256 deadline = block.timestamp + INITIATIVE_DURATION;
 
-        // Initialize the new initiative
         Initiative storage newInitiative = initiatives[newInitiativeId];
         newInitiative.id = newInitiativeId;
         newInitiative.projectId = projectId;
         newInitiative.title = title;
         newInitiative.description = description;
-        newInitiative.goalAmount = goalAmount;
-        // No need to initialize to 0 as it's the default
-        // newInitiative.collectedAmount = 0;
-        // newInitiative.fulfilled = false;
-        newInitiative.deadline = deadline;
+        newInitiative.fundingTarget = fundingTarget;
+        newInitiative.endTime = block.timestamp + DEFAULT_FUNDING_PERIOD;
 
-        // Add to project's initiatives
         projectInitiatives[projectId].push(newInitiativeId);
+        emit InitiativeCreated(newInitiativeId, projectId, title, fundingTarget);
     }
 
-    // Modifiers
-    modifier onlyProjectOwner(uint32 projectId) {
-        require(projects[projectId].owner == msg.sender, "You are not the owner of the project");
-        _;
-    }
+    // --- Donation ---
+    function donate(uint32 initiativeId, uint128 amount) external {
+        Initiative storage initiative = initiatives[initiativeId];
+        require(initiative.id == initiativeId, "Initiative not found");
+        require(block.timestamp <= initiative.endTime, "Initiative expired");
+        require(!initiative.isFulfilled, "Goal already reached");
+        require(amount > 0, "Amount must be > 0");
 
-    // --- Donate ---
-    function donate(uint32 initiativeId, uint128 amount) public {
-        require(initiativeId < initiativeCount, "Initiative not found");
-        Initiative storage ini = initiatives[initiativeId];
-        require(ini.goalAmount > 0, "Uninitialized initiative");
-        require(block.timestamp <= ini.deadline, "Past deadline");
-        require(amount > 0, "Zero donation");
-        require(!ini.fulfilled, "Already funded");
+        // Transfer RON tokens from donor to this contract
+        IERC20(address(ronToken)).safeTransferFrom(msg.sender, address(this), amount);
 
-        // Transfer tokens from donor to contract
-        erc20Ron.safeTransferFrom(msg.sender, address(this), amount);
+        // Update donation tracking
+        initiative.donationsByAddress[msg.sender] += amount;
+        initiative.totalRaised += amount;
 
-        // Update donor record and totals
-        ini.donations[msg.sender] += amount;
-        ini.collectedAmount += amount;
+        // Mint PIF rewards (1 RON = 100 PIF tokens)
+        uint256 rewardAmount = amount * TOKEN_REWARD_RATE;
+        rewardToken.reward(msg.sender, rewardAmount);
 
-        // Mark as fulfilled if goal reached
-        if (ini.collectedAmount >= ini.goalAmount) {
-            ini.fulfilled = true;
+        // Check if goal is reached
+        if (initiative.totalRaised >= initiative.fundingTarget) {
+            initiative.isFulfilled = true;
         }
 
-        // Mint reward tokens to donor
-        rewardToken.mint(msg.sender, amount);
+        emit DonationReceived(initiativeId, msg.sender, amount);
     }
 
-    // =========================
-    // TEST-ONLY helper methods
-    // Remove before production
-    // =========================
-    function testMintRon(address to, uint256 amount) external {
-        // This contract is the owner of RONStablecoin, so it can mint
-        RONStablecoin(address(erc20Ron)).mint(to, amount);
+    // --- Fund Withdrawal ---
+    function claimFunds(uint32 initiativeId) external {
+        Initiative storage initiative = initiatives[initiativeId];
+        require(initiative.id == initiativeId, "Initiative not found");
+        require(initiative.isFulfilled, "Goal not reached");
+
+        Project memory project = projects[initiative.projectId];
+        require(msg.sender == project.owner, "Not project owner");
+
+        uint128 amount = initiative.totalRaised;
+        initiative.totalRaised = 0;
+
+        // Transfer RON tokens to project owner
+        IERC20(address(ronToken)).safeTransfer(project.owner, amount);
+
+        emit FundsClaimed(initiativeId, project.owner, amount);
+    }
+
+    // --- View Functions ---
+    function getInitiative(
+        uint32 initiativeId
+    )
+        external
+        view
+        returns (
+            uint32 id,
+            uint32 projectId,
+            bool isFulfilled,
+            uint256 endTime,
+            uint128 fundingTarget,
+            uint128 totalRaised,
+            string memory title,
+            string memory description
+        )
+    {
+        Initiative storage initiative = initiatives[initiativeId];
+        return (
+            initiative.id,
+            initiative.projectId,
+            initiative.isFulfilled,
+            initiative.endTime,
+            initiative.fundingTarget,
+            initiative.totalRaised,
+            initiative.title,
+            initiative.description
+        );
+    }
+
+    function getDonorContribution(uint32 initiativeId, address donor) external view returns (uint128) {
+        return initiatives[initiativeId].donationsByAddress[donor];
+    }
+
+    // --- Modifiers ---
+    modifier onlyProjectOwner(uint32 projectId) {
+        require(projects[projectId].owner == msg.sender, "Not project owner");
+        _;
     }
 }

@@ -3,10 +3,20 @@
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^6.1.0",
     "@nomiclabs/hardhat-etherscan": "^3.1.8",
+    "@nomiclabs/hardhat-solhint": "^4.1.0",
     "@openzeppelin/contracts": "^5.4.0",
-    "hardhat": "^2.26.1"
+    "hardhat": "^2.26.1",
+    "prettier": "^3.6.2",
+    "prettier-plugin-solidity": "^2.1.0",
+    "solhint": "^6.0.0"
   },
   "dependencies": {
-    "dotenv": "^17.2.1"
+    "dotenv": "^17.2.1",
+    "npm": "^11.5.2"
+  },
+  "scripts": {
+    "format": "prettier --write '**/*.{js,jsx,ts,tsx,json,md,sol}'",
+    "format:check": "prettier --check '**/*.{js,jsx,ts,tsx,json,md,sol}'",
+    "lint": "npm run format:check"
   }
 }

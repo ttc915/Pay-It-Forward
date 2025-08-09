@@ -77,9 +77,22 @@ This guide explains how to test the PayItForward contract using Remix IDE with l
    - Click "transact" and confirm in MetaMask
    - Verify your balance using the `balanceOf` function with your wallet address
 
-### 5.2 Create Project and Initiative
+### 5.2 Approve Token Spending
 
-#### 5.2.1 Create a Project
+Before making donations, you need to approve the PayItForward contract to spend your RON tokens:
+
+1. In the RONStablecoin contract interface, find the `approve` function
+2. Enter these values:
+   - `spender`: The PayItForward contract address
+   - `amount`: The amount to approve (e.g., 100 \* 10^18 for 100 vRON, or use `2^256-1` to approve maximum)
+3. Click "transact" and confirm in MetaMask
+4. (Optional) Verify the allowance using the `allowance` function with:
+   - `owner`: Your wallet address
+   - `spender`: The PayItForward contract address
+
+### 5.3 Create Project and Initiative
+
+#### 5.3.1 Create a Project
 
 1. In Remix, with the PayItForward contract interface open:
    - Find the `createProject` function
@@ -94,7 +107,7 @@ This guide explains how to test the PayItForward contract using Remix IDE with l
    - Enter the project ID (start with 0)
    - Click "call" to view the project details
 
-#### 5.2.2 Create an Initiative
+#### 5.3.2 Create an Initiative
 
 1. In the PayItForward contract interface:
    - Find the `createInitiative` function
@@ -111,18 +124,10 @@ This guide explains how to test the PayItForward contract using Remix IDE with l
    - Enter the initiative ID (start with 0)
    - Click "call" to view the initiative details
 
-### 5.3 Make a Donation
+### 5.4 Make a Donation
 
-1. Approve token spending (one-time per account):
-   - In the RONStablecoin contract interface
-   - Find the `approve` function
-   - Enter:
-     - `spender`: The PayItForward contract address
-     - `amount`: The amount to approve (e.g., 100 \* 10^18 for 100 vRON)
-   - Click "transact" and confirm in MetaMask
-
-2. Make a donation:
-   - In the PayItForward contract interface
+1. Ensure you've completed the token approval steps in section 5.2
+2. In the PayItForward contract interface:
    - Find the `donate` function
    - Enter:
      - `initiativeId`: The ID of the initiative to donate to
@@ -135,7 +140,7 @@ This guide explains how to test the PayItForward contract using Remix IDE with l
    - Enter the initiative ID and donor address
    - Click "call" to view the donation amount
 
-### 5.4 Claim Funds (Project Owner)
+### 5.5 Claim Funds (Project Owner)
 
 1. Once an initiative's funding target is reached, the project owner can claim the funds:
    - In the PayItForward contract interface, find the `claimFunds` function

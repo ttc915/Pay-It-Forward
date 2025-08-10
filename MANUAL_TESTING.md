@@ -113,7 +113,7 @@ Before making donations, you need to approve the PayItForward contract to spend 
    - Find the `createInitiative` function
    - Enter the initiative details:
      - `projectId`: The ID of the project this initiative belongs to (start with 0)
-     - `title`: Initiative title (e.g., "Food Drive 2023")
+     - `title`: Initiative title (e.g., "Food Drive 2025")
      - `description`: A brief description of the initiative
      - `fundingTarget`: The funding target in wei (e.g., 50 \* 10^18 for 50 vRON)
    - Click "transact" and confirm in MetaMask
